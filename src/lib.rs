@@ -3,7 +3,7 @@ use nom::{
     bytes::complete::{tag, take_till, take_while, take_while1},
     character::complete::{char, multispace0, multispace1, one_of},
     combinator::{all_consuming, map_res, opt},
-    multi::{many0, separated_list},
+    multi::{many0, separated_list0},
 };
 pub use nom::{
     error::{convert_error, ErrorKind, ParseError, VerboseError},
@@ -113,7 +113,7 @@ pub fn predicate_item<'a, E: ParseError<&'a str>>(
     let (input, _) = space_or_comment1(input)?;
     let (input, id) = identifier(input)?;
     let (input, _) = char('(')(input)?;
-    let (input, parameters) = separated_list(char(','), pred_par_type_ident_pair)(input)?;
+    let (input, parameters) = separated_list0(char(','), pred_par_type_ident_pair)(input)?;
     let (input, _) = char(')')(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(';')(input)?;
@@ -338,7 +338,7 @@ fn bounded_float<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str,
 fn float_in_set<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, Vec<f64>, E> {
     let (input, _) = char('{')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), float_literal)(input)?;
+    let (input, v) = separated_list0(char(','), float_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char('}')(input)?;
     Ok((input, v))
@@ -362,7 +362,7 @@ fn subset_of_int_range<'a, E: ParseError<&'a str>>(
 fn subset_of_int_set<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, Vec<i128>, E> {
     let (input, _tag) = tag("set of {")(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), int_literal)(input)?;
+    let (input, v) = separated_list0(char(','), int_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _tag) = tag("}")(input)?;
     Ok((input, v))
@@ -371,7 +371,7 @@ fn subset_of_int_set<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a 
 fn int_in_set<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, Vec<i128>, E> {
     let (input, _) = char('{')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), int_literal)(input)?;
+    let (input, v) = separated_list0(char(','), int_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char('}')(input)?;
     Ok((input, v))
@@ -1513,7 +1513,7 @@ pub fn constraint_item<'a, E: ParseError<&'a str>>(
     let (input, id) = identifier(input)?;
     let (input, _) = char('(')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, exprs) = separated_list(char(','), expr)(input)?;
+    let (input, exprs) = separated_list0(char(','), expr)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(')')(input)?;
     let (input, _) = space_or_comment0(input)?;
@@ -1646,7 +1646,7 @@ fn annotation<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, An
     let (input, id) = identifier(input)?;
     let (input, we) = opt(char('('))(input)?;
     if we.is_some() {
-        let (input, expressions_what) = separated_list(char(','), ann_expr)(input)?;
+        let (input, expressions_what) = separated_list0(char(','), ann_expr)(input)?;
         let (input, _) = char(')')(input)?;
         Ok((
             input,
@@ -1682,7 +1682,7 @@ fn ann_expr<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, AnnE
 fn ae_annotations<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, AnnExpr, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, res) = separated_list(char(','), annotation)(input)?;
+    let (input, res) = separated_list0(char(','), annotation)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, AnnExpr::Annotations(res)))
@@ -1768,7 +1768,7 @@ fn sle_set_of_ints<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, SetLiteralExpr, E> {
     let (input, _) = char('{')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), int_expr)(input)?;
+    let (input, v) = separated_list0(char(','), int_expr)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char('}')(input)?;
     Ok((input, SetLiteralExpr::SetInts(v)))
@@ -1779,7 +1779,7 @@ fn sle_set_of_floats<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, SetLiteralExpr, E> {
     let (input, _) = char('{')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), float_expr)(input)?;
+    let (input, v) = separated_list0(char(','), float_expr)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char('}')(input)?;
     Ok((input, SetLiteralExpr::SetFloats(v)))
@@ -1820,7 +1820,7 @@ fn sl_bounded_float<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a s
 fn sl_set_of_ints<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, SetLiteral, E> {
     let (input, _) = char('{')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), int_literal)(input)?;
+    let (input, v) = separated_list0(char(','), int_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char('}')(input)?;
     Ok((input, SetLiteral::SetInts(v)))
@@ -1829,7 +1829,7 @@ fn sl_set_of_ints<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str
 fn sl_set_of_floats<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, SetLiteral, E> {
     let (input, _) = char('{')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), float_literal)(input)?;
+    let (input, v) = separated_list0(char(','), float_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char('}')(input)?;
     Ok((input, SetLiteral::SetFloats(v)))
@@ -1855,7 +1855,7 @@ fn array_of_bool_expr_literal<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, Vec<BoolExpr>, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), bool_expr)(input)?;
+    let (input, v) = separated_list0(char(','), bool_expr)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, v))
@@ -1865,7 +1865,7 @@ fn array_of_bool_literal<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, Vec<bool>, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, al) = separated_list(char(','), bool_literal)(input)?;
+    let (input, al) = separated_list0(char(','), bool_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, al))
@@ -1891,7 +1891,7 @@ fn array_of_int_expr_literal<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, Vec<IntExpr>, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), int_expr)(input)?;
+    let (input, v) = separated_list0(char(','), int_expr)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, v))
@@ -1901,7 +1901,7 @@ fn array_of_int_literal<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, Vec<i128>, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, al) = separated_list(char(','), int_literal)(input)?;
+    let (input, al) = separated_list0(char(','), int_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, al))
@@ -1927,7 +1927,7 @@ fn array_of_float_expr_literal<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, Vec<FloatExpr>, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), float_expr)(input)?;
+    let (input, v) = separated_list0(char(','), float_expr)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, v))
@@ -1937,7 +1937,7 @@ fn array_of_float_literal<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, Vec<f64>, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, al) = separated_list(char(','), float_literal)(input)?;
+    let (input, al) = separated_list0(char(','), float_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, al))
@@ -1963,7 +1963,7 @@ fn array_of_set_expr_literal<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, Vec<SetExpr>, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, v) = separated_list(char(','), set_expr)(input)?;
+    let (input, v) = separated_list0(char(','), set_expr)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, v))
@@ -1973,7 +1973,7 @@ fn array_of_set_literal<'a, E: ParseError<&'a str>>(
 ) -> IResult<&'a str, Vec<SetLiteral>, E> {
     let (input, _) = char('[')(input)?;
     let (input, _) = space_or_comment0(input)?;
-    let (input, al) = separated_list(char(','), set_literal)(input)?;
+    let (input, al) = separated_list0(char(','), set_literal)(input)?;
     let (input, _) = space_or_comment0(input)?;
     let (input, _) = char(']')(input)?;
     Ok((input, al))

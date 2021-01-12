@@ -8,10 +8,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest]
 
     steps:
     - uses: actions/checkout@v1
+    - name: Debug
+      run: rustc --version
     - name: Build
       run: cargo build --verbose
     - name: Run tests
